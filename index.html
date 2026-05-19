@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài lab số 15 - Validate Form với jQuery</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Đảm bảo padding không làm tràn width */
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            border-color: #007bff;
+        }
+        /* Class CSS cho yêu cầu mở rộng (Đổi màu viền) */
+        .input-error {
+            border-color: #dc3545 !important;
+        }
+        .input-success {
+            border-color: #28a745 !important;
+        }
+        /* CSS cho thông báo lỗi */
+        .error-message {
+            color: #dc3545;
+            font-size: 13px;
+            margin-top: 5px;
+            display: none; /* Mặc định ẩn */
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h2>Đăng ký tài khoản</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="fullname">Họ và tên</label>
+                <input type="text" id="fullname" placeholder="Nhập họ và tên">
+                <div class="error-message" id="fullnameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="text" id="email" placeholder="Nhập địa chỉ email">
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Số điện thoại</label>
+                <input type="text" id="phone" placeholder="Nhập số điện thoại">
+                <div class="error-message" id="phoneError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" placeholder="Nhập mật khẩu (ít nhất 6 ký tự)">
+                <div class="error-message" id="passwordError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Xác nhận mật khẩu</label>
+                <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu">
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+
+            <button type="submit">Đăng ký ngay</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Hàm hỗ trợ hiển thị lỗi
+            function showError(inputElement, errorElement, message) {
+                $(errorElement).text(message).show();
+                $(inputElement).removeClass("input-success").addClass("input-error");
+            }
+
+            // Hàm hỗ trợ hiển thị thành công (xóa lỗi)
+            function showSuccess(inputElement, errorElement) {
+                $(errorElement).hide();
+                $(inputElement).removeClass("input-error").addClass("input-success");
+            }
+
+            // Bắt sự kiện khi người dùng bấm nút Submit
+            $("#registerForm").submit(function(e) {
+                // 1. Chặn hành động tải lại trang mặc định của form
+                e.preventDefault();
+
+                // Biến cờ (flag) để kiểm tra trạng thái toàn bộ form
+                let isValid = true;
+
+                // 2. Lấy dữ liệu và loại bỏ khoảng trắng ở 2 đầu bằng trim()
+                let fullname = $("#fullname").val().trim();
+                let email = $("#email").val().trim();
+                let phone = $("#phone").val().trim();
+                let password = $("#password").val().trim();
+                let confirmPassword = $("#confirmPassword").val().trim();
+
+                // 3. Bắt đầu kiểm tra từng trường hợp
+
+                // Kiểm tra Họ tên
+                if (fullname === "") {
+                    showError("#fullname", "#fullnameError", "Họ tên không được để trống.");
+                    isValid = false;
+                } else {
+                    showSuccess("#fullname", "#fullnameError");
+                }
+
+                // Kiểm tra Email bằng Regex cơ bản
+                let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (email === "") {
+                    showError("#email", "#emailError", "Email không được để trống.");
+                    isValid = false;
+                } else if (!emailRegex.test(email)) {
+                    showError("#email", "#emailError", "Định dạng email không hợp lệ.");
+                    isValid = false;
+                } else {
+                    showSuccess("#email", "#emailError");
+                }
+
+                // Kiểm tra Số điện thoại (Yêu cầu mở rộng: Regex kiểm tra 10 số, bắt đầu bằng 0)
+                let phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+                if (phone === "") {
+                    showError("#phone", "#phoneError", "Số điện thoại không được để trống.");
+                    isValid = false;
+                } else if (!phoneRegex.test(phone)) {
+                    showError("#phone", "#phoneError", "Số điện thoại không hợp lệ.");
+                    isValid = false;
+                } else {
+                    showSuccess("#phone", "#phoneError");
+                }
+
+                // Kiểm tra Mật khẩu (độ dài)
+                if (password === "") {
+                    showError("#password", "#passwordError", "Mật khẩu không được để trống.");
+                    isValid = false;
+                } else if (password.length < 6) {
+                    showError("#password", "#passwordError", "Mật khẩu phải có ít nhất 6 ký tự.");
+                    isValid = false;
+                } else {
+                    showSuccess("#password", "#passwordError");
+                }
+
+                // Kiểm tra Xác nhận mật khẩu
+                if (confirmPassword === "") {
+                    showError("#confirmPassword", "#confirmPasswordError", "Vui lòng xác nhận mật khẩu.");
+                    isValid = false;
+                } else if (confirmPassword !== password) {
+                    showError("#confirmPassword", "#confirmPasswordError", "Mật khẩu xác nhận không khớp.");
+                    isValid = false;
+                } else {
+                    showSuccess("#confirmPassword", "#confirmPasswordError");
+                }
+
+                // 4. Nếu tất cả đều hợp lệ (isValid vẫn là true)
+                if (isValid) {
+                    alert("Chúc mừng! Bạn đã đăng ký thành công.");
+                    // Xóa trắng form sau khi thành công
+                    $("#registerForm")[0].reset();
+                    // Bỏ luôn các viền xanh
+                    $("input").removeClass("input-success");
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
